@@ -12,7 +12,7 @@ class Home extends StatefulWidget {
   State<Home> createState() => _HomeState();
 }
 
-class _HomeState extends State<Home> {
+class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   // @override
   // void initState() {
   //   super.initState();
@@ -41,13 +41,49 @@ class _HomeState extends State<Home> {
 
   //   testSQL();
   // }
+  late TabController _tabController;
+  @override
+  initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    // 4. Dispose the controller when the widget is disposed
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-        child: Scaffold(
-      appBar: AppBar(
-          title: const Text("Study Flashcards"), backgroundColor: Colors.blue),
-    ));
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("Study Flashcards"),
+          backgroundColor: Colors.blue,
+          // 5. Add the TabBar to the bottom of the AppBar
+        ),
+        // 6. Use TabBarView as the body
+        body: TabBarView(
+          controller: _tabController,
+          children: const [
+            // Content for the "Home" tab
+            Center(child: Text("This is the Home Page")),
+
+            // Content for the "Decks" tab
+            Center(child: Text("This is the Decks Page")),
+          ],
+        ),
+        bottomNavigationBar: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(icon: Icon(Icons.add), text: "New"),
+            Tab(icon: Icon(Icons.folder), text: "Saved"),
+          ],
+          labelColor: Colors.blue,
+        ),
+      ),
+    );
   }
 }
