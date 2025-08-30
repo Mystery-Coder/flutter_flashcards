@@ -1,5 +1,5 @@
 import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+import 'package:path/path.dart' as p;
 
 class DatabaseHelper {
   static const _databaseName = "flashcards.db";
@@ -9,6 +9,7 @@ class DatabaseHelper {
   static const columnId = '_id';
   static const columnQuestion = 'question';
   static const columnAnswer = 'answer';
+  static const columnTopic = 'topic';
 
   // make this a singleton class
   DatabaseHelper._privateConstructor();
@@ -25,14 +26,15 @@ class DatabaseHelper {
 
   // this opens the database (and creates it if it doesn't exist)
   _initDatabase() async {
-    String path = join(await getDatabasesPath(), _databaseName);
+    String path = p.join(await getDatabasesPath(), _databaseName);
     return await openDatabase(path, version: _databaseVersion,
         onCreate: (db, version) {
       db.execute('''
           CREATE TABLE $table (
             $columnId INTEGER PRIMARY KEY,
             $columnQuestion TEXT NOT NULL,
-            $columnAnswer TEXT NOT NULL
+            $columnAnswer TEXT NOT NULL,
+            $columnTopic TEXT NOT NULL
           )
           ''');
     });
@@ -43,8 +45,8 @@ class DatabaseHelper {
   Future<int> rawInstert(FlashCardData flashCardData) async {
     Database db = await singleInstance.database;
     return await db.rawInsert('''
-    INSERT INTO $table ($columnQuestion, $columnAnswer) VALUES (?, ?)
-''', [flashCardData.question, flashCardData.answer]);
+    INSERT INTO $table ($columnQuestion, $columnAnswer, $columnTopic) VALUES (?, ?, ?)
+''', [flashCardData.question, flashCardData.answer, flashCardData.topic]);
   }
 
   Future<List<FlashCardData>> rawQueryAllRows() async {
@@ -63,8 +65,13 @@ class FlashCardData {
   int? id;
   String question;
   String answer;
+  String topic;
 
-  FlashCardData({this.id, required this.question, required this.answer});
+  FlashCardData(
+      {this.id,
+      required this.question,
+      required this.answer,
+      required this.topic});
 
   Map<String, dynamic> toMap() {
     return {
@@ -72,15 +79,16 @@ class FlashCardData {
       // but we need it for updates and deletes.
       'question': question,
       'answer': answer,
+      'topic': topic
     };
   }
 
   // A factory constructor to create a MyData from a Map
   factory FlashCardData.fromMap(Map<String, dynamic> map) {
     return FlashCardData(
-      id: map['_id'],
-      question: map['question'],
-      answer: map['answer'],
-    );
+        id: map['_id'],
+        question: map['question'],
+        answer: map['answer'],
+        topic: map['topic']);
   }
 }
