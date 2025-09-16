@@ -38,39 +38,38 @@ class _NewState extends State<New> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const SizedBox(
-          height: 100,
-        ),
+        const SizedBox(height: 100),
         Text(
           "Currently Saved $noOfTopics topics",
           style: const TextStyle(fontSize: 20),
         ),
-        const SizedBox(
-          height: 75,
-        ),
+        const SizedBox(height: 75),
         SizedBox(
-            width: MediaQuery.of(context).size.width * 0.75,
-            child: TextField(
-              controller: topicController,
-              decoration: const InputDecoration(
-                labelText: "Enter New Topic to Study",
-                labelStyle: TextStyle(color: Colors.black),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(4)),
-                  borderSide:
-                      BorderSide(color: Colors.blue), // when not focused
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(4)),
-                  borderSide:
-                      BorderSide(color: Colors.blue, width: 2), // when focused
-                ),
+          width: MediaQuery.of(context).size.width * 0.75,
+          child: TextField(
+            controller: topicController,
+            decoration: const InputDecoration(
+              labelText: "Enter New Topic to Study",
+              labelStyle: TextStyle(color: Colors.black),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(4)),
+                borderSide: BorderSide(color: Colors.blue), // when not focused
               ),
-            )),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(4)),
+                borderSide: BorderSide(
+                  color: Colors.blue,
+                  width: 2,
+                ), // when focused
+              ),
+            ),
+          ),
+        ),
         FilledButton.icon(
           onPressed: () async {
-            Uri groqURL =
-                Uri.parse("https://api.groq.com/openai/v1/chat/completions");
+            Uri groqURL = Uri.parse(
+              "https://api.groq.com/openai/v1/chat/completions",
+            );
             final jsonSchema = {
               "type": "object",
               "properties": {
@@ -82,18 +81,18 @@ class _NewState extends State<New> {
                     "properties": {
                       "question": {
                         "type": "string",
-                        "description": "The question for the flashcard."
+                        "description": "The question for the flashcard.",
                       },
                       "answer": {
                         "type": "string",
-                        "description": "The detailed answer for the flashcard."
-                      }
+                        "description": "The detailed answer for the flashcard.",
+                      },
                     },
-                    "required": ["question", "answer"]
-                  }
-                }
+                    "required": ["question", "answer"],
+                  },
+                },
               },
-              "required": ["flashcards"]
+              "required": ["flashcards"],
             };
             final body = {
               "model": "meta-llama/llama-4-maverick-17b-128e-instruct",
@@ -101,13 +100,13 @@ class _NewState extends State<New> {
                 {
                   "role": "system",
                   "content":
-                      "You are a flashcard creation assistant. Your response MUST ONLY be a JSON array of objects. Do not include any other text, preambles, or explanations. The format is [{ \"question\": \"...\", \"answer\": \"...\" }]."
+                      "You are a flashcard creation assistant. Your response MUST ONLY be a JSON array of objects. Do not include any other text, preambles, or explanations. The format is [{ \"question\": \"...\", \"answer\": \"...\" }].",
                 },
                 {
                   "role": "user",
                   "content":
-                      "Prepare 5 flashcard type questions for the topic: ${topicController.text}. The questions should be important and meaningful. The answer should have a clear, concise reason in a neat, organized, minimalist manner."
-                }
+                      "Prepare 5 flashcard type questions for the topic: ${topicController.text}. The questions should be important and meaningful. The answer should have a clear, concise reason in a neat, organized, minimalist manner.",
+                },
               ],
               "temperature": 0.7,
               "response_format": {
@@ -116,47 +115,54 @@ class _NewState extends State<New> {
                   "name": "flashcard_generator", // The required 'name' property
                   "description":
                       "A schema for generating a list of flashcards.",
-                  "schema": jsonSchema // Your schema is nested inside here
-                }
-              }
+                  "schema": jsonSchema, // Your schema is nested inside here
+                },
+              },
             };
 
-            http.Response res = await http.post(groqURL,
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': "Bearer ${dotenv.env["GROQ_KEY"]}"
-                },
-                body: jsonEncode(body));
+            http.Response res = await http.post(
+              groqURL,
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': "Bearer ${dotenv.env["GROQ_KEY"]}",
+              },
+              body: jsonEncode(body),
+            );
 
-            var cards =
-                jsonDecode(res.body)['choices'][0]['message']['content'];
+            var cards = jsonDecode(
+              res.body,
+            )['choices'][0]['message']['content'];
             cards = jsonDecode(cards);
             cards = cards['flashcards'];
 
             List<FlashCardData> aiCards = [];
 
             for (var card in cards) {
-              aiCards.add(FlashCardData(
+              aiCards.add(
+                FlashCardData(
                   topic: topicController.text,
                   question: card['question'],
-                  answer: card['answer']));
+                  answer: card['answer'],
+                ),
+              );
             }
             if (context.mounted) {
               Navigator.pushReplacementNamed(
                 context,
                 StudyCards.routeName, // Use the static routeName
-                arguments: aiCards, // Pass your data here
+                arguments: aiCards,
               );
             }
           },
           style: FilledButton.styleFrom(
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.zero, // sharp edges
-              ),
-              backgroundColor: Colors.blue),
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.zero,
+            ),
+            backgroundColor: Colors.blue,
+          ),
           icon: const Icon(Icons.arrow_forward),
           label: const Text("Study"),
-        )
+        ),
       ],
     );
   }
